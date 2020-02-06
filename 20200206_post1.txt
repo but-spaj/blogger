@@ -2,10 +2,39 @@
 <html lang ="ja">
 <head>
   <meta charset="UTF-8">
-  <title>テンプレート</title>
+  <title>"今日もgit"</title>
 </head>
 <body>
-  できる
+  昨日までに進めたことを復習がてら、今日は実際にブログの記事をVSCodeで作成し、そのtxtファイルをGithubにコミット&プッシュしてみる。<br>
+  手順としては、<br>
+  <ol>
+  <li>repositoryの作成</li>
+  <li>ローカルへのコピー</li>
+  <li>txt作成</li>
+  <li>リモートへのプッシュ</li>
+  </ol>
+  のようなステップに分割して進める。<br>
+  <br>
+  まず、ブログ記事用に「blogger」というrepositoryを新たに作成した。これは、Githubでrepository作成を選択するとすぐできる。そして「clone or download」を押下すれば、bloggerのhttpsをコピーできる。<br>
+  <br>
+  次に、ターミナルを開いてデスクトップに新規フォルダを作成、その中で「git clone URL」とすると、指定フォルダ内がrepositoryとつながる。<br>
+  <br>
+  3つ目はVSCodeで「blogger」フォルダ内にhtml txtを作成していく。Bloggerの「HTMLモード」と比べるとラクに入力できているような気がしないでもない。<br>
+  <br>
+  最後に、このtxtファイルをステージにアップし、コミットし、プッシュする。<br>
+  すると、一昨日と同様、プッシュ時にユーザー名とパスワードを求められ、素直に入力するとエラーになった。<br>
+  <pre><code class="prettyprint">$ git remote -v
+  $ origin https://github.com/but-spaj/blogger.git (fetch)
+  $ origin https://github.com/but-spaj/blogger.git (push)
+  </code></pre>
+  またもや異なるURLが作成されているため、以下のようにして再設定した。<br>
+  <pre><code class="prettyprint">
+  $ git remote set-url origin git@github.com:but-spaj/blogger.git
+  $ git remote -v
+  $ origin  git@github.com:but-spaj/blogger.git (fetch)
+  $ origin  git@github.com:but-spaj/blogger.git (push)
+  </code></pre>
+  これで、再度プッシュして、完成！！<br>  
 </body>
 </html>
 
