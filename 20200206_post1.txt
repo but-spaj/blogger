@@ -34,7 +34,14 @@
   $ origin  git@github.com:but-spaj/blogger.git (fetch)
   $ origin  git@github.com:but-spaj/blogger.git (push)
   </code></pre>
-  これで、再度プッシュして、完成！！<br>  
+  これで、再度プッシュして、、、できてる！！<br>
+  <br>
+  あとは、この記事のbodyをBloggerにコピーしてタイトルを付け直せば完成！！<br>
+  これなら、記事のバックアップも変更管理もしっかりできる気がする。<br>
+  また、変更履歴のコメントにもなれることができそう。<br>
+  <br>
+  眠たいので、今日はここまで。<br>
+  明日はpaizaのPython入門編レッスン8を進めていく予定。<br>
 </body>
 </html>
 
