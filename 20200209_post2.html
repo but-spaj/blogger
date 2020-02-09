@@ -108,10 +108,45 @@ Table.台帳の例
 <br>
 IFTTTとの連携ができていれば、この2列目に{リスト追加日}、3列目に{魚の名前}が追記される。<br>
 しかし、このとき{リスト追加日}によって入力される形式が「February 09, 2020 at 03:42PM 」という風になっており、写真から抽出する想定の「2020/02/09 1:37:00」と大きく異なるため、そのままにしておくと後々整理の際に厄介なことが起こりそうな気がする。日付に限らず、データの形式はそろえておきたい。<br>
+それを実現するためのGASは<a href="https://github.com/but-spaj/open/blob/master/getFishName.txt" target="_blank">Github</a>にアップしているので、どうぞ使ってください。<br>
+<pre><code class="prettyprint">function setDate() {
+  // https://qiita.com/kimikimi714/items/19b6a42a8a416f669decから写したコードをベースに、SpreadsheetAppの繰り返しをなくして高速化した
+  
+  // var start = new Date(); //https://tonari-it.com/gas-spreadsheet-speedup/から時間測定部分を写した行  
+
+  var rawDateColumnIndex = 2; // IFTTTの日時データを保持する列のインデックス
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet(); // bookの指定
+  var sheet = spreadsheet.getActiveSheet(); // sheetの指定
+  var lastRow = sheet.getLastRow(); // シートのデータのある最終行を取得して変数lastRowに格納
+  var arayData = sheet.getRange(2, rawDateColumnIndex, lastRow -1, 1).getValues(); // 2列目の2行目から最終行までを二次元配列arayData[[行1],[行2],[行3],,,[行lastRow-1]]に格納
+  // Logger.log("これから配列 " + arayData + " を高速処理します。対象は" + arayData.length + "行あります。" );  
+  
+  for (var i = 0; i &lt; arayData.length; i++) { // arayDataの長さの直前まで0から1つず順に変数iに格納する間、ブロック内の処理を繰り返す
+    var rawDate = arayData[i][0]; // 変数に配列から[行0[列0]~行i[列0]~行arayData-1[列0]]の要素を格納 
+    var rawDateValueM = rawDate.toString().slice(-1); // rawDateの要素を文字列に変換したときの末尾を変数rawDateValueMに格納 
+    if (rawDateValueM === "M" ) { // rawDataValueMにある文字列右端が"M"、つまりIFTTTの日時データならブロック内の処理を行う
+      arayData.splice(i,1,[covertIFTTTDateToGoogleSpreadsheetDate(rawDate)]); // Trueなら、関数convertIFTTT~で変換した日時データをi番目の要素と置換
+    }
+  }
+  sheet.getRange(2, rawDateColumnIndex, arayData.length, 1).setValues(arayData); // arayDataを2列目の2行目から配列の長さまでの範囲に出力
+  // Logger.log("以上の処理の結果、配列は " + arayData + " となりました。" );  
+  
+  // var end = new Date(); //https://tonari-it.com/gas-spreadsheet-speedup/から時間測定部分を写した行
+  // var span_sec = (end - start)/1000; //https://tonari-it.com/gas-spreadsheet-speedup/から時間測定部分を写した行
+  // Logger.log("処理時間は " + span_sec + " 秒でした。" ); //https://tonari-it.com/gas-spreadsheet-speedup/から時間測定部分を写した行
+}
+
+function covertIFTTTDateToGoogleSpreadsheetDate(str) {
+  var moment = Moment.moment(str, "MMMM D, YYYY hh:mma"); // strには"September 26, 2017 at 06:52PM"のようなものが入る
+  return moment.format("YYYY/MM/DD HH:mm").toString();
+}</code></pre>
+たくさんの人の知恵を借りて組み上げたものです。<br>
 <br>
 ※ 台帳の形式は自分で好きに決めるし、日付のフォーマットとかどうでもいいよという方は、この先はすべてそれを解決するためのものなので読み飛ばしていただいて問題ありません。 ※<br>
 <br>
-そこで、文字列を日付に変換していい感じのフォーマットにするような関数くらいあるだろうと思って探すと、そんなに甘くなかった。<br>
+上記のコードが組み上がるまでの経緯を残しておきます。<br>
+<br>
+前述の課題である、文字列を日付に変換していい感じのフォーマットにするような関数くらいあるだろうと思って探すと、そんなに甘くなかった。<br>
 マクロ的なやつを組まないといけないようだ。<br>
 Googleスプレッドシートでは、マクロ的なやつのことを「GAS:Google Apps Script」と呼ぶらしい。調べていてわかったが、どうやらJavaScript的な感じらしい。<br>
 <br>
@@ -121,14 +156,14 @@ Googleスプレッドシートでは、マクロ的なやつのことを「GAS:G
 <br>
 しかし、コピペしておいて失礼な話であるが、不満なところが2ヶ所あった。<br>
 <ul>
-  <li><a href="#gas1"></a>日付が2列できてしまうところ。IFTTTが入力したB列を元に変換した日付をその隣のA列にGASが入力するのだが、どうせならBのIFTTT入力セルを上書きしてほしいと思った。</li>
-  <li><a href="#gas2"></a>実行速度がめっちゃ遅いところ。4行のシートに対して、60秒くらいかけて処理している。もっと行が増えたら動かなくなってしまう。</li>
+  <li><a href="#gas1">1つ目の課題</a> :日付が2列できてしまうところ。IFTTTが入力したB列を元に変換した日付をその隣のA列にGASが入力するのだが、どうせならBのIFTTT入力セルを上書きしてほしいと思った。</li>
+  <li><a href="#gas2">2つ目の課題</a> :実行速度がめっちゃ遅いところ。4行のシートに対して、60秒くらいかけて処理している。もっと行が増えたら動かなくなってしまう。</li>
 </ul>
 以下、順番に対応していく。<br>
 <br>
 <a id="gas1">1つ目の課題</a>
 <br>
-1については、<pre><code class="prettyprint">setValue()</code></pre>で書き込む範囲をA列からB列に変更すれば済むと考えた。<br>
+こちらついては、<pre><code class="prettyprint">setValue()</code></pre>で書き込む範囲をA列からB列に変更すれば済むと考えた。<br>
 しかし、それによって<pre><code class="prettyprint">setValue()</code></pre>するかどうかを判定するif文の条件も変更する必要がでてきた。もともとはA列が""でB列に値が入っている行で処理をするようになっていたが、<pre><code class="prettyprint">setValue()</code></pre>を書き込む範囲をB列に変更すれば、すべての行でA列は""のままになってしまう。そもそもA列には日付ではなく通し番号をいれる予定だし。<br>
 そのため、if文では「セルの値の末尾がMなら、そのセルに対して<pre><code class="prettyprint">setValue()</code></pre>の変換を行う」ようにした。<br>
 では「セルの値の末尾」はどうやって取得するのかというと、<a href="https://vba-gas.info/gas-slice" target="_blank">ひでぶ☆ろぐ『【Google Apps Script(GAS)】sliceで文字列から文字を切り出す』</a>によれば<pre><code class="prettyprint">slice()</code></pre>というメソッド?を使うらしい。<br>
@@ -162,10 +197,46 @@ log 高速化前 1000行テスト<br>
 配列がよくわからないがせっかくなので勉強すると、そういえばpaizaでリストさわった！と思い出した。それの応用である。<br>
 for文の中からAPI操作を排除すべく、<pre><code class="prettyprint">rawDateValueM = sheet.getRange(i + 2, rawDateColumnIndex).getDisplayValue.slice(-1)</code></pre>を配列rawDateを使って<pre><code class="prettyprint">rawDate.toString().slice(-1)</code></pre>とした。<br>
 <a href="https://teratail.com/questions/187288" target="_blank">teratail『【Google Apps Script】filter内でsliceが実行できない』</a>を参照すると、配列の場合は「toString()」を配列とslice()の間に挟めばよい、と書いてあったからだ。<br>
-そして、<a href="https://rabbitfoot.xyz/gas-array/" target="_blank">れいんの技術録『GASの配列の扱い方について（定義、要素の追加、削除）』</a>
-
+そして、<a href="https://rabbitfoot.xyz/gas-array/" target="_blank">れいんの技術録『GASの配列の扱い方について（定義、要素の追加、削除）』</a>配列の基本と<pre><code class="prettyprint">splice()</code></pre>を活用し、2次元配列に格納した日時データのうち、IFTTT由来の要素を変換後の日時データと置換するようにした。<br>
+その後、2次元配列をB列に貼り付けることで日時データを更新するのであるが、このとき使う<pre><code class="prettyprint">setValues()</code></pre>とその貼り付け先を指定する<pre><code class="prettyprint">getRange()</code></pre>にもひとクセあった。<br>
+<a href="https://teratail.com/questions/108301" target="_blank">teratail『GAS での　エラー：範囲の座標、またはサイズが無効です。』</a>のように範囲違いエラーが生じたため、配列の<pre><code class="prettyprint">length</code></pre>プロパティを使うことで範囲を一致させ<pre><code class="prettyprint">getRange(2, rawDateColumnIndex, arayData.length, 1).setValues(arayData)</code></pre>とした。<br>
+最後に、for文の繰り返し回数と配列に含めるセル範囲をデータセルに応じてオフセットさせるため、@3mcさんの<a href="https://qiita.com/3mc/items/826cd66890d7812e917e" target="_banke">『GoogleSpreadSheetで、指定した範囲の、データが含まれている最終行を取得する方法。』</a>を参考に<pre><code class="prettyprint">lastRow = sheet.getLastRow()</code></pre>と書いて最下行を取得して配列の行方向の範囲とした。<br>
+<br>
+さて、これで本当に高速化できたのかというと、めっちゃできた。<br>
+<br>
+log 高速化後 4行テスト<br>
+<pre><code class="prettyprint">
+  [20-02-09 15:54:02:059 JST] これから配列 Sun Feb 09 2020 01:37:00 GMT+0900 (日本標準時),February 09, 2020 at 03:53PM,February 09, 2020 at 03:53PM,February 09, 2020 at 03:53PM を高速処理します。対象は4行あります。
+  [20-02-09 15:54:02:084 JST] 以上の処理の結果、配列は Sun Feb 09 2020 01:37:00 GMT+0900 (日本標準時),2020/02/09 15:53,2020/02/09 15:53,2020/02/09 15:53 となりました。
+  [20-02-09 15:54:02:086 JST] 処理時間は 0.316 秒でした。</code></pre>
+  <br>
+  <br>
+log 高速化前 1000行テスト<br>
+<pre><code class="prettyprint">
+  [20-02-09 16:32:22:863 JST] これから配列 Sun Feb 09 2020 01:37:00 GMT+0900 (日本標準時),February 09, 2020 at 03:53PM,February 09, 2020 at 03:53PM,February 09, 2020 at 03:53PM,,~中略~,, を高速処理します。対象は1000行あります。
+  [20-02-09 16:32:22:892 JST] 以上の処理の結果、配列は Sun Feb 09 2020 01:37:00 GMT+0900 (日本標準時),2020/02/09 15:53,2020/02/09 15:53,2020/02/09 15:53,,~中略~,, となりました。
+  [20-02-09 16:32:22:894 JST] 処理時間は 0.66 秒でした。
+  </code></pre>
+  <br>
+4行では 0.967 秒から 0.316 秒へと3倍の高速化に成功し、<br>
+1000行ではなんと 75.66 秒から 0.66 秒へと100倍以上の高速化に成功した。<br>
+<br>
 <h4><a id="matome">まとめ</a></h4>
-
+以上で、音声入力した{魚の名前}とその{日時}が{台帳}の最下行に追加されていく仕組みの現時点での仕様になる。<br>
+使い方としては、概要にも記した通り、<br>
+見て名前も聞いたが作業中でメモできなかったときや、<br>
+水族館で写真を撮ったが魚の名前がレア過ぎてわからなくなることを防ぐために同時刻に名前を記録するとか、<br>
+写真整理中に名前の入力を音声で行うとか、を想定している。<br>
+これがなにかの一助になれば幸いです。<br>
+<br>
+また、これらの機能を実現するためにたくさんの方のアウトプットの力を借りた。<br>
+一人の力ではこれは実現できなかった。<br>
+先人の知恵の恩恵に与ることで、自分のこのアウトプットも誰かの役に立てるといいなと強く感じた。自分だけが使うのはもったいない。<br>
+一方で、先人のアウトプットも完全に他人のためではなく、自分の備忘録のために書いたというのもあるように思う。<br>
+書いたコードはGithubで高速化前後を比較できるが、何のためにどこを変更したのか、何を参考にしたのかという情報は、Githubのコミット時のメッセージにはまだ書けない。<br>
+そういう意味で、このブログに完成までの軌跡を残すことは自分のためになっている。<br>
+もちろん、ドキュメント作成能力の向上にもなればいいと思っている。<br>
+標本でも同じだ。<br>
 誰かに活用してもらうのを待っていては、それが使われる場面は来ないかもしれない。<br>
 ならば、自分が活用すればいいのだ。<br>
 その覚悟、その勇気が自分には必要だ。<br>
