@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang ="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Siriに魚の名前を言うとGoogleシートの台帳に追加されるシステムを作った</title>
+</head>
+<body>
+<h1>Siriに魚の名前を言うとGoogleシートの台帳に追加されるシステムを作った</h1>
+<h4>標本台帳アプリへの道</h4>
+<p>
+<br>
+<h5>音声認識と言えばSiri</h5>
+以前、標本台帳アプリのアイデアを公開https://but-spaj.blogspot.com/2020/02/blog-post_3.htmlした。<br>
+取り込んだ写真のデータをから日付や位置情報、水深などを台帳に転記するとともに、写真内のタグをOCRで取り出して個体識別できるようにしたい、というものだ。<br>
+これには、台帳内の各レコードに対して標準和名を手入力していく必要がある(それこそ画像認識で同定できればそれもありだが、あとはそれを信用できるかの問題)。<br>
+その手入力作業を補完する機能として思いついたのが、この記事にまとめる「叫んで覚える魚の名前」システムだ。<br>
+今回は初めて目次を作ってみた。<br>
+<br>
+目次
+<ol>
+<li><a href="#gaiyou">システム概要</a></li>
+<li><a href="#kousei">構成要素</a></li>
+<li><a href="#siri">Siri音声認識によるiOSリマインダー追記</a></li>
+<li><a href="#ifttt">IFTTTによるiOSリマインダーからGoogleスプレッドシート追記</a></li>
+<li><a href="#gas">Googleスプレッドシート最適化</a></li>
+<li><a href="#matome">まとめ</a></li>
+</ol>
+<br>
+<h4><a id="gaiyou">システム概要</a></h4>
+
+<h4><a id="kousei">構成要素</a></h4>
+<h4><a id="siri">Siri音声認識によるiOSリマインダー追記</a></h4>
+<h4><a id="gas">IFTTTによるiOSリマインダーからGoogleスプレッドシート追記</a></h4>
+<h4><a id="gas">Googleスプレッドシート最適化</a></h4>
+<h4><a id="matome">まとめ</a></h4>
+
+誰かに活用してもらうのを待っていては、それが使われる場面は来ないかもしれない。<br>
+ならば、自分が活用すればいいのだ。<br>
+その覚悟、その勇気が自分には必要だ。<br>
+</p>
+<br>
+</body>
+</html>
