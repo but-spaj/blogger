@@ -10,11 +10,15 @@
 <p>
 <br>
 <h5>音声認識と言えばSiri</h5>
-以前、標本台帳アプリのアイデアを公開https://but-spaj.blogspot.com/2020/02/blog-post_3.htmlした。<br>
+以前、標本台帳アプリの<a href="https://but-spaj.blogspot.com/2020/02/blog-post_3.html" target="_blank">アイデア</a>を公開した。<br>
 取り込んだ写真のデータをから日付や位置情報、水深などを台帳に転記するとともに、写真内のタグをOCRで取り出して個体識別できるようにしたい、というものだ。<br>
 これには、台帳内の各レコードに対して標準和名を手入力していく必要がある(それこそ画像認識で同定できればそれもありだが、あとはそれを信用できるかの問題)。<br>
-その手入力作業を補完する機能として思いついたのが、この記事にまとめる「叫んで覚える魚の名前」システムだ。<br>
-今回は初めて目次を作ってみた。<br>
+その手入力作業を補完する機能として思いついたのが、<br>
+この記事にまとめる「叫んで記録する魚の名前」システムだ。<br>
+既存の仕組みを組み合わせるだけで誰でも作れる。<br>
+先人に感謝。<br>
+<br>
+今回は説明のために<a href="https://seolaboratory.jp/42119/" target="_blank">目次</a>を実装してみた。<br>
 <br>
 目次
 <ol>
@@ -27,11 +31,139 @@
 </ol>
 <br>
 <h4><a id="gaiyou">システム概要</a></h4>
-
+見た魚の名前を記録しておきたい、という場面は皆さんよくあると思います。<br>
+しかし、そんなときに限って、手元にメモがないとか。<br>
+メモがあっても手が濡れていて書けないとか。<br>
+書いたけどいつのメモかわからないとか。<br>
+何が書いてあるかわからないとか。<br>
+字が解読できないとか。<br>
+メモする余裕もないとか。<br>
+水族館で写真撮ったけど何だったか忘れたとか。<br>
+そんなとき、iPhoneに向かって魚の名前を叫ぶだけで、<br>
+その魚を見た時刻とその名前を記録できるなら、どうでしょうか。<br>
+しかも、その記録はGoogleスプレッドシートで管理できるとしたら。<br>
+台帳管理が圧倒的に手軽になりそうじゃないですか？<br>
+恥ずかしながら自分は、手書きのメモも、あとからExcelにちまちま入力することもできていません。<br>
+これだけで完結するというわけではもちろんありませんが、<br>
+もし同じような不便さを感じている方が他にいらっしゃいましたら、<br>
+少しでもお力になれれば幸いです。<br>
+あ、もちろん、魚の名前以外でも記録できるよ。<br>
+<br>
 <h4><a id="kousei">構成要素</a></h4>
+本システムは以下で構成される。<br>
+<ul>
+  <li>iPhone7(iOS 13.3)</li>
+  <li>iOSリマインダー</li>
+  <li>IFTTT</li>
+  <li>Googleスプレッドシート</li>
+</ul>
+以下のように動作する。<br>
+iPhone7のSiriに向かって「リストに{魚の名前}を追加」と話しかける<br>
+→ SiriがiOSリマインダー内のリストに{魚の名前}を追加する<br>
+→ IFTTTがそれを検知して{日付}と{魚の名前}をGoogleスプレッドシートの{台帳}に行を追加する<br>
+<br>
 <h4><a id="siri">Siri音声認識によるiOSリマインダー追記</a></h4>
-<h4><a id="gas">IFTTTによるiOSリマインダーからGoogleスプレッドシート追記</a></h4>
+「Hey,Siri」「OK,Google」「Alexa」など、<br>
+声を掛けて要件を伝えると所定のプログラムが起動してリアクションをくれる音声アシスタント技術の進歩により、<br>
+音声をコントローラーとして機械を動かすことができるようになった。<br>
+iPhoneに搭載されたSiriにも様々な機能があるが、<br>
+今回使うのはその中でも音声を文字に変換して書きとめてくれる機能だ。<br>
+<br>
+方法は、Appleのサポートベージ<a href="https://support.apple.com/ja-jp/guide/iphone/iph88463e18/ios" target="_blank">『リマインダーを追加する』</a>にもあるように、<br>
+「リストに{魚の名前}を追加」と話しかけるだけだ。<br>
+{魚の名前}が追加されるのは、iOSリマインダー内で最上部に並んでいるリストになる。
+ここでは例として{魚の名前同期}というリスト名にしておく。<br>
+作業中にこの機能を使うなら、iPhoneよりもApple Watchの方が便利かもしれない。<br>
+弱点は、1度に1単語しか登録できないこと。1つの単語に複数の属性をもたせたり、複数の単語を1度の呼び出しで登録させることはできない。<br>
+単語を複数接続した文章を書き込ませてGoogleスプレッドシート側で分割するか、複数単語を書き込めるAlexaスキルを開発できれば使い勝手はより高まるだろう。<br>
+<br>
+<h4><a id="ifttt">IFTTTによるiOSリマインダーからGoogleスプレッドシート追記</a></h4>
+<a href="https://ifttt.com/" target="_blank">IFTTT</a>とは、IF THIS{アプリAの動作} THEN THAT{アプリBの動作}という名前のように、2つのアプリを連携させて1つの機能を実現するためのアプリだ。<br>
+<a href="https://ifttt.com/create" target="_blank">Make your own Applets from scratch</a>から、まずアプリAとして「iOS Reminders」を選択する。<br>
+トリガーには「New reminder added to list」を選んで、Siriが書き込めるiOSリマインダーのリストの名前を入力する。ここの例では{魚の名前同期}を入力する。<br>
+次にアプリBには「Google Sheets」を選択する。<br>
+アクションには「Add row to spreadsheet」を選んで、以下のように条件を指定する。<br>
+「Spreadsheet name」には、台帳として使用するシートの名前を入力する。ここの例では{台帳}としておく。この後の動作確認でシートが作成されるので、予めGoogleスプレッドシートを開いてシートを作成しておく必要はない。むしろ、同名のシートが作成されて混乱する。<br>
+「Formatted row」は、シートの行に追加される内容とその列番号を入力する。ここの例では、台帳の構造と合わせるために「||| {{CreatedDate}} ||| {{Title}}」としておく。これの意味はB列に{リスト追加日}、C列に{リストタイトル}={魚の名前}である。他には備考や優先度も指定できるので、iOSリマインダーに登録できる情報を増やせれば上手く活用できるかもしれない。<br>
+「Drive folder path」は、シートの保存先となるGoogleドライブ内の階層を指定する。これはどこでもいいので、各自の好みに任せる。<br>
+最後に、アプレットと呼ぶこれらの連携に好みの名前を付けて、Finishuする。<br>
+<br>
+ここまでできれば、一度Siriを呼び出して{魚の名前}を叫んでみよう。<br>
+Googleドライブの指定の階層に、{台帳}という名前のシートが作成されているはずだ。<br>
+<br>
 <h4><a id="gas">Googleスプレッドシート最適化</a></h4>
+{魚の名前}自体の登録はここまでにできているので、後は{台帳}にどこまで情報を持たせたいか、という話になる。<br>
+自分の場合、{台帳}には以下の列項目を設定して情報を管理しようとしている。<br>
+※ もっとこんな情報も必要とか、自分はこうしているよ、というご意見ございましたら是非お寄せください。改良したいです。 ※<br>
+<br>
+Table.台帳の例
+<table border="1">
+  <tr>
+    <th>No.</th><th>撮影日時</th><th>標準和名</th><th>学名</th><th>記載者名</th><th>記載年</th><th>個体識別</th><th>標本番号</th><th>行政区分</th><th>水域</th><th>漁獲地</th><th>緯度</th><th>経度</th><th>水深(m)</th><th>水温(℃)</th><th>採集方法</th><th>飼育期間(D)</th><th>写真名</th><th>写真区分</th><th>撮影者名</th><th>同定者名</th><th>同定日</th><th>備考</th>
+  </tr>
+  <tr>
+    <td>0</td><td>2020/02/09 1:37</td><td>トゲチョウチョウウオ</td><td><i>Chaetodon auriga</i></td><td>Forsskal</td><td>1775</td><td>PFC00000</td><td>00000</td><td>AA県AA市</td><td>BB湾</td><td>CC</td><td>00°00'00''N</td><td>00°00'00''E</td><td>00</td><td>20</td><td>素潜り徒手</td><td>535</td><td>yyyymmdd_000</td><td>生態</td><td>DDDD</td><td>DDDD</td><td>yyyymmdd</td><td>胸鰭に水色がのっている</td>
+  </tr>
+</table>
+<br>
+IFTTTとの連携ができていれば、この2列目に{リスト追加日}、3列目に{魚の名前}が追記される。<br>
+しかし、このとき{リスト追加日}によって入力される形式が「February 09, 2020 at 03:42PM 」という風になっており、写真から抽出する想定の「2020/02/09 1:37:00」と大きく異なるため、そのままにしておくと後々整理の際に厄介なことが起こりそうな気がする。日付に限らず、データの形式はそろえておきたい。<br>
+<br>
+※ 台帳の形式は自分で好きに決めるし、日付のフォーマットとかどうでもいいよという方は、この先はすべてそれを解決するためのものなので読み飛ばしていただいて問題ありません。 ※<br>
+<br>
+そこで、文字列を日付に変換していい感じのフォーマットにするような関数くらいあるだろうと思って探すと、そんなに甘くなかった。<br>
+マクロ的なやつを組まないといけないようだ。<br>
+Googleスプレッドシートでは、マクロ的なやつのことを「GAS:Google Apps Script」と呼ぶらしい。調べていてわかったが、どうやらJavaScript的な感じらしい。<br>
+<br>
+まずは、検索してでてきた@kimikimi714さんの<a href="https://qiita.com/kimikimi714/items/19b6a42a8a416f669dec" target="_blank">『いろんなログをGoogle Spreadsheetに追加する』</a>にあったコードをコピペさせていただいて、動作を確認した。<br>
+これには「Moment.js」というライブラリから関数が引っ張られており、その初期設定は<a href="https://tonari-it.com/gas-moment-js-moment/" target="_blank">いつも隣にITのお仕事『日付＆時刻の便利ライブラリ「Moment.js」をGoogle Apps Scriptで使う方法』</a>を元に行った。<br>
+ここまでで、{台帳}シートを開くことがトリガーとなってGASが日付変換処理を書けてくれる。<br>
+<br>
+しかし、コピペしておいて失礼な話であるが、不満なところが2ヶ所あった。<br>
+<ul>
+  <li><a href="#gas1"></a>日付が2列できてしまうところ。IFTTTが入力したB列を元に変換した日付をその隣のA列にGASが入力するのだが、どうせならBのIFTTT入力セルを上書きしてほしいと思った。</li>
+  <li><a href="#gas2"></a>実行速度がめっちゃ遅いところ。4行のシートに対して、60秒くらいかけて処理している。もっと行が増えたら動かなくなってしまう。</li>
+</ul>
+以下、順番に対応していく。<br>
+<br>
+<a id="gas1">1つ目の課題</a>
+<br>
+1については、<pre><code class="prettyprint">setValue()</code></pre>で書き込む範囲をA列からB列に変更すれば済むと考えた。<br>
+しかし、それによって<pre><code class="prettyprint">setValue()</code></pre>するかどうかを判定するif文の条件も変更する必要がでてきた。もともとはA列が""でB列に値が入っている行で処理をするようになっていたが、<pre><code class="prettyprint">setValue()</code></pre>を書き込む範囲をB列に変更すれば、すべての行でA列は""のままになってしまう。そもそもA列には日付ではなく通し番号をいれる予定だし。<br>
+そのため、if文では「セルの値の末尾がMなら、そのセルに対して<pre><code class="prettyprint">setValue()</code></pre>の変換を行う」ようにした。<br>
+では「セルの値の末尾」はどうやって取得するのかというと、<a href="https://vba-gas.info/gas-slice" target="_blank">ひでぶ☆ろぐ『【Google Apps Script(GAS)】sliceで文字列から文字を切り出す』</a>によれば<pre><code class="prettyprint">slice()</code></pre>というメソッド?を使うらしい。<br>
+<pre><code class="prettyprint">slice(-1)</code></pre>とすれば末尾の1文字を取得できるとのことで、<pre><code class="prettyprint">rawDate.slice(-1)</code></pre>と書いたら「functionがどうのこうの」と起こられてしまった。<br>
+<a href="http://engineer-test.yogatter.com/archives/14294" target="_blank">エンジニア就活『Google Apps Scriptでプログラミングを学ぶ 第5回』</a>の説明でわかったが、文字切り出しの<pre><code class="prettyprint">slice()</code></pre>は文字列型に対して使う(配列から要素を取得するバージョンもある)のだと。<br>
+コードを見せずに話されても困ると思うが、rawDateは2次元配列の要素が格納されており、その要素が文字列だったり日付だったりするためにエラーになっていた。<br>
+じゃあどうやって文字列にするんだと調べたら、<a href="https://www.pre-practice.net/2018/01/getvalue-getdisplayvalue.html" target="_blank">Google Apps Script試行錯誤Blog『値を取得するメソッドは getValue() と getDisplayValue() がある』</a>より、<pre><code class="prettyprint">getValue()</code></pre>じゃなくて<pre><code class="prettyprint">getDisplayValue()</code></pre>だと表示されている文字列の通りに値を取得してくれるということだった。<br>
+配列はよくわからないので諦めて<pre><code class="prettyprint">rawDateValueM = sheet.getRange(i + 2, rawDateColumnIndex).getDisplayValue.slice(-1)</code></pre>と書くことにした。<br>
+これで、1つ目は解決できた。<br>
+しかし、恐ろしいことに、このコードを実行して<a href="https://tonari-it.com/gas-spreadsheet-speedup/" target="_blank">いつも隣にITのお仕事『Google Apps Scriptのスプレッドシート読み書きを格段に高速化をする方法』</a>で処理速度を測定すると4行中3セルの変換に約1秒、1000行では76秒もかかる。やばい。<br>
+<br>
+log 高速化前 4行テスト<br>
+<pre><code class="prettyprint">[20-02-09 15:43:31:991 JST] これから配列 Sun Feb 09 2020 01:37:00 GMT+0900 (日本標準時),February 09, 2020 at 03:42PM,February 09, 2020 at 03:42PM,February 09, 2020 at 03:42PM を処理します。対象は4行あります。
+[20-02-09 15:43:32:646 JST] 以上の処理の結果、配列は Sun Feb 09 2020 01:37:00 GMT+0900 (日本標準時),Sun Feb 09 2020 15:42:00 GMT+0900 (日本標準時),Sun Feb 09 2020 15:42:00 GMT+0900 (日本標準時),Sun Feb 09 2020 15:42:00 GMT+0900 (日本標準時) となりました。
+[20-02-09 15:43:32:648 JST] 処理時間は 0.967 秒でした。</code></pre>
+<br>
+<br>
+log 高速化前 1000行テスト<br>
+<pre><code class="prettyprint">[20-02-09 15:45:34:470 JST] これから配列 Sun Feb 09 2020 01:37:00 GMT+0900 (日本標準時),February 09, 2020 at 03:44PM,February 09, 2020 at 03:44PM,February 09, 2020 at 03:44PM,,~中略~,, を処理します。対象は1000行あります。
+[20-02-09 15:46:49:590 JST] 以上の処理の結果、配列は Sun Feb 09 2020 01:37:00 GMT+0900 (日本標準時),Sun Feb 09 2020 15:44:00 GMT+0900 (日本標準時),Sun Feb 09 2020 15:44:00 GMT+0900 (日本標準時),Sun Feb 09 2020 15:44:00 GMT+0900 (日本標準時),,~中略~,, となりました。
+[20-02-09 15:46:49:594 JST] 処理時間は 75.66 秒でした。</code></pre>
+<br>
+<a id="gas2">2つ目の課題</a>
+<br>
+処理に時間がかかる原因は、GASがシートを参照するAPI操作が何度もあるためだそうだ。<br>
+<a href="https://tonari-it.com/gas-spreadsheet-speedup/" target="_blank">いつも隣にITのお仕事『Google Apps Scriptのスプレッドシート読み書きを格段に高速化をする方法』</a>によると、<pre><code class="prettyprint">getRange()</code></pre>や<pre><code class="prettyprint">getValue()</code></pre>がそのAPI操作だという。<br>
+先程のコードで言うとfor文の中に3つのAPI操作と1つのMoment.js操作があり、この繰り返しが増えるほど処理時間もかかるようになっている。<br>
+では処理速度を速めるにはどうすればいいかというと、毎回セルを参照して値を取得するのではなく、<br>
+1度にまとめて範囲内のセルの値を配列に格納し、以降の計算を配列内でやりくりして最後に配列をセル範囲に貼り付ける、ということだ。<br>
+それを実現するためのポイントは<a href="https://tonari-it.com/gas-array-push-append/" target="_blank">いつも隣にITのお仕事『Google Apps Scriptで配列を使ってスプレッドシートにデータ行を追加する方法』</a>によれば<pre><code class="prettyprint">getValues</code></pre>と<pre><code class="prettyprint">setValues</code></pre>を使うことだという。<br>
+配列がよくわからないがせっかくなので勉強すると、そういえばpaizaでリストさわった！と思い出した。それの応用である。<br>
+for文の中からAPI操作を排除すべく、<pre><code class="prettyprint">rawDateValueM = sheet.getRange(i + 2, rawDateColumnIndex).getDisplayValue.slice(-1)</code></pre>を配列rawDateを使って<pre><code class="prettyprint">rawDate.toString().slice(-1)</code></pre>とした。<br>
+<a href="https://teratail.com/questions/187288" target="_blank">teratail『【Google Apps Script】filter内でsliceが実行できない』</a>を参照すると、配列の場合は「toString()」を配列とslice()の間に挟めばよい、と書いてあったからだ。<br>
+そして、<a href="https://rabbitfoot.xyz/gas-array/" target="_blank">れいんの技術録『GASの配列の扱い方について（定義、要素の追加、削除）』</a>
+
 <h4><a id="matome">まとめ</a></h4>
 
 誰かに活用してもらうのを待っていては、それが使われる場面は来ないかもしれない。<br>
